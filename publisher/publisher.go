@@ -25,6 +25,7 @@ import (
 	"github.com/gohugoio/hugo/media"
 
 	"github.com/gohugoio/hugo/minifiers"
+	"github.com/gohugoio/hugo/prettifiers"
 
 	bp "github.com/gohugoio/hugo/bufferpool"
 	"github.com/gohugoio/hugo/helpers"
@@ -73,6 +74,7 @@ type Descriptor struct {
 type DestinationPublisher struct {
 	fs                    afero.Fs
 	min                   minifiers.Client
+	pretty                prettifiers.Client
 	htmlElementsCollector *htmlElementsCollector
 }
 
@@ -86,6 +88,13 @@ func NewDestinationPublisher(rs *resources.Spec, outputFormats output.Formats, m
 	}
 	pub = DestinationPublisher{fs: fs, htmlElementsCollector: classCollector}
 	pub.min, err = minifiers.New(mediaTypes, outputFormats, cfg)
+
+	if err != nil {
+		return pub, err
+	}
+
+	pub.pretty, err = prettifiers.New(mediaTypes, outputFormats, cfg)
+
 	return
 }
 
@@ -183,6 +192,13 @@ func (p DestinationPublisher) createTransformerChain(f Descriptor) transform.Cha
 		minifyTransformer := p.min.Transformer(f.OutputFormat.MediaType)
 		if minifyTransformer != nil {
 			transformers = append(transformers, minifyTransformer)
+		}
+	}
+
+	if p.pretty.PrettifyOutput {
+		prettifyTransformer := p.pretty.Transformer(f.OutputFormat.MediaType)
+		if prettifyTransformer != nil {
+			transformers = append(transformers, prettifyTransformer)
 		}
 	}
 
