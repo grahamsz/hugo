@@ -188,6 +188,13 @@ func (p DestinationPublisher) createTransformerChain(f Descriptor) transform.Cha
 
 	}
 
+	if p.pretty.PrettifyOutput {
+		prettifyTransformer := p.pretty.Transformer(f.OutputFormat.MediaType)
+		if prettifyTransformer != nil {
+			transformers = append(transformers, prettifyTransformer)
+		}
+	}
+
 	if p.min.MinifyOutput {
 		minifyTransformer := p.min.Transformer(f.OutputFormat.MediaType)
 		if minifyTransformer != nil {
@@ -195,12 +202,7 @@ func (p DestinationPublisher) createTransformerChain(f Descriptor) transform.Cha
 		}
 	}
 
-	if p.pretty.PrettifyOutput {
-		prettifyTransformer := p.pretty.Transformer(f.OutputFormat.MediaType)
-		if prettifyTransformer != nil {
-			transformers = append(transformers, prettifyTransformer)
-		}
-	}
+
 
 	return transformers
 }
